@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Criminal Crafting Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #15181a;
+    --panel: #1d2224;
+    --panel-2: #23292b;
+    --line: #3a4245;
+    --cyan: #39d3e8;
+    --cyan-dim: #1f7c8a;
+    --red: #c8483f;
+    --red-dim: #7a2e29;
+    --green: #4caf6d;
+    --text: #e7ecec;
+    --text-dim: #93a0a2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(57,211,232,0.06), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Chakra Petch', sans-serif;
+    padding:28px 18px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  .title-block{margin-bottom:22px;}
+  .eyebrow{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:600;
+    letter-spacing:.35em;
+    font-size:12px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+  }
+  h1{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;
+    font-style:italic;
+    font-size:42px;
+    margin:2px 0 0;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+    color:#fff;
+  }
+  h1 span{color:var(--cyan);}
+
+  .layout{
+    display:grid;
+    grid-template-columns:330px 1fr;
+    gap:16px;
+    align-items:start;
+  }
+  @media (max-width:860px){ .layout{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    position:relative;
+  }
+  .panel::before{
+    content:"";
+    position:absolute;inset:0;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+    pointer-events:none;
+  }
+
+  .recipe-list-head{
+    background:var(--cyan);
+    color:#0a1315;
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;
+    font-style:italic;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    padding:12px 16px;
+    font-size:15px;
+  }
+  .recipe-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 16px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    transition:background .12s;
+  }
+  .recipe-item:hover{background:var(--panel-2);}
+  .recipe-item.active{
+    background:var(--panel-2);
+    box-shadow:inset 3px 0 0 var(--cyan);
+  }
+  .recipe-icon{
+    width:34px;height:34px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:19px;
+    background:#161a1b;
+    border:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .recipe-name{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:600;
+    font-size:16px;
+  }
+  .recipe-sub{
+    font-size:11px;
+    color:var(--text-dim);
+    margin-top:2px;
+  }
+
+  .detail{padding:22px 24px 26px;}
+  .detail-head{
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+    border-bottom:1px solid var(--line);
+    padding-bottom:16px;
+    margin-bottom:18px;
+  }
+  .detail-icon{
+    width:64px;height:64px;
+    background:#161a1b;
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:32px;
+    flex-shrink:0;
+  }
+  .detail-name{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;
+    font-style:italic;
+    font-size:24px;
+    text-transform:uppercase;
+    color:#fff;
+  }
+  .detail-desc{color:var(--text-dim);font-size:13px;margin-top:2px;}
+
+  .qty-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .qty-label{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:600;
+    letter-spacing:.12em;
+    font-size:12px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+  }
+  .qty-box{
+    display:flex;align-items:stretch;
+    border:1px solid var(--line);
+  }
+  .qty-box button{
+    background:var(--panel-2);
+    border:none;color:var(--text);
+    width:38px;font-size:18px;cursor:pointer;
+    font-family:'Rajdhani',sans-serif;
+  }
+  .qty-box button:hover{background:#2c3335;}
+  .qty-box input{
+    width:70px;
+    text-align:center;
+    background:#12191a;
+    border:none;
+    border-left:1px solid var(--line);
+    border-right:1px solid var(--line);
+    color:var(--cyan);
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;
+    font-size:18px;
+  }
+  .qty-box input:focus{outline:none;}
+
+  .toggle-row{
+    display:flex;align-items:center;gap:8px;
+    font-size:12px;color:var(--text-dim);
+    font-family:'Rajdhani',sans-serif;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    font-weight:600;
+    cursor:pointer;
+    user-select:none;
+  }
+  .toggle-row input{accent-color:var(--cyan);width:15px;height:15px;cursor:pointer;}
+
+  .stat-bars{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    margin-bottom:24px;
+  }
+  @media (max-width:700px){ .stat-bars{grid-template-columns:repeat(2,1fr);} }
+  .stat{
+    padding:10px 12px;
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    text-align:center;
+    letter-spacing:.03em;
+    border:1px solid var(--line);
+  }
+  .stat small{
+    display:block;
+    font-weight:600;
+    font-size:9px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    opacity:.75;
+    margin-bottom:3px;
+  }
+  .stat.time{background:rgba(57,211,232,0.13); color:var(--cyan); border-color:var(--cyan-dim);}
+  .stat.remaining{background:rgba(200,72,63,0.15); color:#e8867f; border-color:var(--red-dim);}
+  .stat.fail{background:rgba(200,72,63,0.22); color:#f0958c; border-color:var(--red-dim);}
+  .stat.xp{background:rgba(76,175,109,0.16); color:#7fd39a; border-color:#2e6b45;}
+
+  h2.section{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;
+    font-style:italic;
+    text-transform:uppercase;
+    font-size:15px;
+    letter-spacing:.05em;
+    color:var(--cyan);
+    border-bottom:1px solid var(--line);
+    padding-bottom:8px;
+    margin:0 0 12px;
+  }
+
+  .results-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-bottom:24px;
+  }
+  @media (max-width:700px){ .results-grid{grid-template-columns:1fr;} }
+
+  .result-card{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    padding:16px;
+  }
+  .result-card h3{
+    font-family:'Rajdhani',sans-serif;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin:0 0 10px;
+    color:var(--text-dim);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .result-card h3 em{
+    font-style:normal;
+    background:var(--cyan-dim);
+    color:#eafcff;
+    font-size:10px;
+    padding:2px 7px;
+  }
+  .ing-row{
+    display:flex;justify-content:space-between;
+    font-family:'Rajdhani',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:6px 0;
+    border-bottom:1px dashed var(--line);
+  }
+  .ing-row:last-child{border-bottom:none;}
+  .ing-row span:last-child{color:var(--cyan);font-weight:700;}
+
+  .summary-line{
+    display:flex;justify-content:space-between;
+    font-size:13px;
+    color:var(--text-dim);
+    padding:5px 0;
+  }
+  .summary-line b{color:var(--text);font-weight:600;}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  th,td{
+    text-align:left;
+    padding:9px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  th{
+    font-family:'Rajdhani',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    font-size:11px;
+    color:var(--text-dim);
+    font-weight:700;
+  }
+  tr.row-active{background:rgba(57,211,232,0.06);}
+  td.num{color:var(--cyan);font-weight:600;}
+  .footnote{
+    font-size:11px;
+    color:var(--text-dim);
+    margin-top:10px;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="title-block">
+    <div class="eyebrow">BlackMarket // Available Recipes</div>
+    <h1>Criminal <span>Crafting</span> Calculator</h1>
+  </div>
+
+  <div class="layout">
+    <!-- Recipe list -->
+    <div class="panel">
+      <div class="recipe-list-head">Available Recipes</div>
+      <div id="recipeList"></div>
+    </div>
+
+    <!-- Detail + calculator -->
+    <div class="panel">
+      <div class="detail">
+        <div class="detail-head">
+          <div class="detail-icon" id="detIcon"></div>
+          <div>
+            <div class="detail-name" id="detName"></div>
+            <div class="detail-desc" id="detDesc"></div>
+          </div>
+        </div>
+
+        <div class="qty-row">
+          <span class="qty-label">Items wanted</span>
+          <div class="qty-box">
+            <button id="minusBtn">−</button>
+            <input id="qtyInput" type="number" value="1" min="1">
+            <button id="plusBtn">+</button>
+          </div>
+          <label class="toggle-row">
+            <input type="checkbox" id="failToggle" checked>
+            Account for fail chance (failed attempts still burn materials)
+          </label>
+        </div>
+
+        <div class="stat-bars">
+          <div class="stat time"><small>Craft Time (ea)</small><span id="statTime"></span></div>
+          <div class="stat remaining"><small>Batch Limit</small><span id="statBatch"></span></div>
+          <div class="stat fail"><small>Fail Chance</small><span id="statFail"></span></div>
+          <div class="stat xp"><small>XP / Success</small><span id="statXp"></span></div>
+        </div>
+
+        <h2 class="section">Requirements — per single craft</h2>
+        <div class="result-card" style="margin-bottom:24px;">
+          <div id="perCraftIngredients"></div>
+        </div>
+
+        <h2 class="section">Calculator Results</h2>
+        <div class="results-grid">
+          <div class="result-card">
+            <h3>If every craft succeeds <em>best case</em></h3>
+            <div id="idealResults"></div>
+          </div>
+          <div class="result-card">
+            <h3>Expected, with fail chance <em id="expectedTag">applied</em></h3>
+            <div id="expectedResults"></div>
+          </div>
+        </div>
+
+        <div class="summary-line"><span>Attempts required (expected)</span><b id="sumAttempts"></b></div>
+        <div class="summary-line"><span>Batches needed (10 crafts / batch)</span><b id="sumBatches"></b></div>
+        <div class="summary-line"><span>Total craft time (expected)</span><b id="sumTime"></b></div>
+        <div class="summary-line"><span>Total XP earned</span><b id="sumXp"></b></div>
+
+        <div class="footnote">
+          Assumes XP is only awarded on a successful craft, and a failed attempt still consumes its full ingredient cost (standard for this crafting system). "Batch" refers to the 10-crafts-remaining limit shown per recipe window before it needs to reset.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:16px;padding:20px 22px;">
+    <h2 class="section">All Recipes — Reference Table</h2>
+    <table>
+      <thead>
+        <tr><th>Recipe</th><th>Ingredients</th><th>Time</th><th>Window</th><th>Fail %</th><th>XP</th><th>Result</th></tr>
+      </thead>
+      <tbody id="refTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+const recipes = [
+  { id:'bobbypin', name:'Bobby Pin', icon:'📎', desc:'For getting unstuck.',
+    time:10, window:10, fail:15, xp:25, batch:10,
+    ingredients:[{n:'Aluminium', q:5}], result:'1x Bobby Pin' },
+
+  { id:'drill', name:'Drill', icon:'🔧', desc:'For Dilling.',
+    time:20, window:20, fail:20, xp:25, batch:10,
+    ingredients:[{n:'Electronic Kit', q:2},{n:'Metal Scrap', q:15},{n:'Plastic', q:7}],
+    result:'1x D-Handle Drill' },
+
+  { id:'radio', name:'Radio Scanner', icon:'📻', desc:'Scans for Radio Signal.',
+    time:30, window:20, fail:13, xp:25, batch:10,
+    ingredients:[{n:'Electronic Kit', q:10},{n:'Plastic', q:20}],
+    result:'1x Radio Scanner' },
+
+  { id:'usb', name:'USB Stick', icon:'💾', desc:'USB Hacking Device.',
+    time:30, window:20, fail:15, xp:25, batch:10,
+    ingredients:[{n:'Electronic Kit', q:7},{n:'Plastic', q:15}],
+    result:'1x USB Stick' },
+
+  { id:'boost', name:'Boosting Tablet', icon:'📱', desc:'Tablet for Boosting Cars.',
+    time:130, window:120, fail:15, xp:50, batch:10,
+    ingredients:[{n:'Electronic Kit', q:15},{n:'Plastic', q:30}],
+    result:'1x Boosting Tablet' },
+
+  { id:'gps', name:'GPS Hacking Device', icon:'📡', desc:'Device for hacking gps.',
+    time:70, window:60, fail:15, xp:50, batch:10,
+    ingredients:[{n:'Electronic Kit', q:7},{n:'Plastic', q:15}],
+    result:'1x GPS Hacking Device' },
+
+  { id:'cuffs', name:'Handcuffs', icon:'⛓️', desc:'Handcuffs.',
+    time:45, window:20, fail:15, xp:25, batch:10,
+    ingredients:[{n:'Iron', q:20},{n:'Steel', q:15}],
+    result:'1x Handcuffs' },
+
+  { id:'laptop', name:'Laptop', icon:'💻', desc:'Hacking Device.',
+    time:60, window:60, fail:15, xp:25, batch:10,
+    ingredients:[{n:'Electronic Kit', q:15},{n:'Plastic', q:30}],
+    result:'1x Laptop' },
+
+  { id:'vhd', name:'Vehicle Hacking Device', icon:'🚗', desc:'Device for hacking into cars.',
+    time:70, window:60, fail:15, xp:50, batch:10,
+    ingredients:[{n:'Electronic Kit', q:7},{n:'Plastic', q:15}],
+    result:'1x Hacking Device' },
+];
+
+let activeId = 'drill';
+
+function fmtTime(sec){
+  const m = Math.floor(sec/60);
+  const s = Math.round(sec%60);
+  return (m>0 ? m+'m ' : '') + s + 's';
+}
+
+function renderList(){
+  const list = document.getElementById('recipeList');
+  list.innerHTML = '';
+  recipes.forEach(r=>{
+    const div = document.createElement('div');
+    div.className = 'recipe-item' + (r.id===activeId ? ' active' : '');
+    div.innerHTML = `
+      <div class="recipe-icon">${r.icon}</div>
+      <div>
+        <div class="recipe-name">${r.name}</div>
+        <div class="recipe-sub">${r.fail}% fail · +${r.xp}XP · ${fmtTime(r.time)}</div>
+      </div>`;
+    div.onclick = ()=>{ activeId = r.id; renderList(); renderDetail(); };
+    list.appendChild(div);
+  });
+}
+
+function getQty(){
+  const el = document.getElementById('qtyInput');
+  let v = parseInt(el.value,10);
+  if(isNaN(v) || v<1) v = 1;
+  el.value = v;
+  return v;
+}
+
+function renderDetail(){
+  const r = recipes.find(x=>x.id===activeId);
+  const qty = getQty();
+  const applyFail = document.getElementById('failToggle').checked;
+
+  document.getElementById('detIcon').textContent = r.icon;
+  document.getElementById('detName').textContent = r.name;
+  document.getElementById('detDesc').textContent = r.desc;
+
+  document.getElementById('statTime').textContent = fmtTime(r.time);
+  document.getElementById('statBatch').textContent = r.batch + '/' + r.batch;
+  document.getElementById('statFail').textContent = r.fail + '%';
+  document.getElementById('statXp').textContent = '+' + r.xp;
+
+  // per-craft ingredients
+  const perCraft = document.getElementById('perCraftIngredients');
+  perCraft.innerHTML = r.ingredients.map(i=>`
+    <div class="ing-row"><span>${i.n}</span><span>${i.q}x</span></div>
+  `).join('') + `<div class="ing-row"><span>Result</span><span>${r.result}</span></div>`;
+
+  // Ideal case (no fails, attempts = qty)
+  const idealDiv = document.getElementById('idealResults');
+  idealDiv.innerHTML = r.ingredients.map(i=>`
+    <div class="ing-row"><span>${i.n}</span><span>${i.q*qty}x</span></div>
+  `).join('') + `
+    <div class="ing-row"><span>Attempts</span><span>${qty}</span></div>
+    <div class="ing-row"><span>Time</span><span>${fmtTime(r.time*qty)}</span></div>
+    <div class="ing-row"><span>XP</span><span>${r.xp*qty}</span></div>`;
+
+  // Expected case (accounting for fail%)
+  const failRate = r.fail/100;
+  const expectedAttempts = applyFail ? Math.ceil(qty / (1-failRate)) : qty;
+  const expectedTagEl = document.getElementById('expectedTag');
+  expectedTagEl.textContent = applyFail ? 'applied' : 'off';
+
+  const expDiv = document.getElementById('expectedResults');
+  expDiv.innerHTML = r.ingredients.map(i=>`
+    <div class="ing-row"><span>${i.n}</span><span>${i.q*expectedAttempts}x</span></div>
+  `).join('') + `
+    <div class="ing-row"><span>Attempts</span><span>${expectedAttempts}</span></div>
+    <div class="ing-row"><span>Time</span><span>${fmtTime(r.time*expectedAttempts)}</span></div>
+    <div class="ing-row"><span>XP</span><span>${r.xp*qty}</span></div>`;
+
+  document.getElementById('sumAttempts').textContent = expectedAttempts + ' crafts (for ' + qty + ' successful item' + (qty>1?'s':'') + ')';
+  document.getElementById('sumBatches').textContent = Math.ceil(expectedAttempts / r.batch) + ' batch' + (Math.ceil(expectedAttempts/r.batch)>1?'es':'');
+  document.getElementById('sumTime').textContent = fmtTime(r.time*expectedAttempts);
+  document.getElementById('sumXp').textContent = (r.xp*qty) + ' XP';
+}
+
+function renderTable(){
+  const tbody = document.getElementById('refTable');
+  tbody.innerHTML = recipes.map(r=>`
+    <tr class="${r.id===activeId?'row-active':''}">
+      <td>${r.icon} ${r.name}</td>
+      <td>${r.ingredients.map(i=>i.q+'x '+i.n).join(', ')}</td>
+      <td class="num">${fmtTime(r.time)}</td>
+      <td>${fmtTime(r.window)}</td>
+      <td class="num">${r.fail}%</td>
+      <td class="num">+${r.xp}</td>
+      <td>${r.result}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('minusBtn').onclick = ()=>{ document.getElementById('qtyInput').value = Math.max(1, getQty()-1); renderDetail(); };
+document.getElementById('plusBtn').onclick = ()=>{ document.getElementById('qtyInput').value = getQty()+1; renderDetail(); };
+document.getElementById('qtyInput').oninput = renderDetail;
+document.getElementById('failToggle').onchange = renderDetail;
+
+renderList();
+renderDetail();
+renderTable();
+
+// re-render table highlight whenever recipe changes
+const origRenderDetail = renderDetail;
+renderDetail = function(){ origRenderDetail(); renderTable(); };
+</script>
+
+</body>
+</html>
