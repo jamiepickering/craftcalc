@@ -464,6 +464,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="blackmarket">BlackMarket</button>
     <button class="tab-btn" data-tab="weapons">Weapons</button>
+    <button class="tab-btn" data-tab="heist">Heist</button>
     <button class="tab-btn" data-tab="pricelist">Price List</button>
   </div>
 
@@ -717,6 +718,24 @@ const data = {
         ingredients:[{n:'Iron', q:10},{n:'Metal Scrap', q:20},{n:'Rubber', q:5}],
         result:'1x Vintage Pistol' },
     ]
+  },
+  heist: {
+    label: 'Heist',
+    eyebrow: 'Heist Gear // Available Recipes',
+    recipes: [
+      { id:'gasmask', name:'Gas Mask', icon:'\u{1F637}', desc:'Protective gas mask.',
+        time:10, window:null, fail:0, xp:25, batch:null,
+        ingredients:[{n:'Cloth', q:10},{n:'Plastic', q:10},{n:'Rubber', q:10}],
+        result:'1x Gas Mask' },
+      { id:'hackerphone', name:'Hacker Phone', icon:'\u{1F4F1}', desc:'Phone for hacking.',
+        time:10, window:null, fail:0, xp:25, batch:null,
+        ingredients:[{n:'Electronic Kit', q:5},{n:'Plastic', q:10},{n:'Rubber', q:10}],
+        result:'1x Hacker Phone' },
+      { id:'paintknife', name:'Painting Knife', icon:'\u{1F5E1}\uFE0F', desc:'For cutting paintings.',
+        time:10, window:null, fail:0, xp:25, batch:null,
+        ingredients:[{n:'Plastic', q:10},{n:'Steel', q:10}],
+        result:'1x Painting Knife' },
+    ]
   }
 };
 
@@ -904,6 +923,9 @@ const orderItems = [
     { rid:'boost', label:'Boosting Tablet' },
     { rid:'cuffs', label:'Handcuffs' },
     { rid:'bobbypin', label:'Bobby Pin' },
+    { rid:'gasmask', label:'Gas Mask' },
+    { rid:'hackerphone', label:'Hacker Phone' },
+    { rid:'paintknife', label:'Painting Knife' },
   ].filter(x=>x.label)},
   { group:'Guns', list:[
     { rid:'pistol', label:'Pistol' },
@@ -978,7 +1000,7 @@ function renderItemOrders(){
 }
 
 function findRecipe(rid){
-  for(const tab of ['blackmarket','weapons']){
+  for(const tab of ['blackmarket','weapons','heist']){
     const r = data[tab].recipes.find(x=>x.id===rid);
     if(r) return r;
   }
