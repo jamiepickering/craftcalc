@@ -358,6 +358,98 @@
     margin-top:10px;
     line-height:1.6;
   }
+
+  /* Price list view */
+  #priceListView{display:none;}
+  .pl-grid{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    gap:16px;
+    align-items:start;
+  }
+  @media (max-width:900px){ .pl-grid{grid-template-columns:1fr;} }
+  .pl-section-title{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;font-style:italic;text-transform:uppercase;
+    font-size:13px;letter-spacing:.08em;
+    color:var(--cyan);
+    padding:10px 14px 6px;
+  }
+  .pl-price-row{
+    display:flex;justify-content:space-between;
+    padding:7px 14px;
+    border-bottom:1px dashed var(--line);
+    font-family:'Rajdhani',sans-serif;
+    font-weight:600;font-size:14px;
+  }
+  .pl-price-row span:last-child{color:#e3e2df;font-weight:700;}
+  .pkg-card{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .pkg-head{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .pkg-name{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;font-style:italic;text-transform:uppercase;
+    font-size:18px;color:#fff;
+  }
+  .pkg-contents{
+    font-size:12px;color:var(--text-dim);
+    line-height:1.7;
+    margin-bottom:10px;
+  }
+  .pkg-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+  }
+  @media (max-width:700px){ .pkg-stats{grid-template-columns:1fr;} }
+  .pkg-stat{
+    border:1px solid var(--line);
+    padding:8px 10px;
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;font-size:14px;
+    text-align:center;
+  }
+  .pkg-stat small{
+    display:block;font-weight:600;font-size:9px;
+    letter-spacing:.13em;text-transform:uppercase;
+    opacity:.7;margin-bottom:2px;
+  }
+  .pkg-stat.value{color:#e3e2df;background:rgba(201,201,199,0.08);}
+  .pkg-stat.time{color:#c9c9c7;background:rgba(201,201,199,0.05);}
+  .pkg-stat.xp{color:#e3e2df;background:rgba(201,201,199,0.05);}
+  .totals-card{
+    background:rgba(163,43,30,0.12);
+    border:1px solid var(--cyan-dim);
+    padding:18px;
+  }
+  .warn-note{
+    font-size:11px;color:#d4695c;margin-top:8px;line-height:1.5;
+  }
+
+  .item-order-row{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;
+    padding:7px 14px;
+    border-bottom:1px dashed var(--line);
+  }
+  .item-order-row .io-name{
+    font-family:'Rajdhani',sans-serif;font-weight:600;font-size:14px;
+    flex:1;
+  }
+  .item-order-row .io-price{
+    font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;
+    color:#e3e2df;width:80px;text-align:right;
+  }
+  .item-order-row .qty-box input{width:52px;font-size:15px;}
+  .item-order-row .qty-box button{width:30px;font-size:15px;}
 </style>
 </head>
 <body>
@@ -372,6 +464,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="blackmarket">BlackMarket</button>
     <button class="tab-btn" data-tab="weapons">Weapons</button>
+    <button class="tab-btn" data-tab="pricelist">Price List</button>
   </div>
 
   <div class="layout">
@@ -449,6 +542,57 @@
       </thead>
       <tbody id="refTable"></tbody>
     </table>
+  </div>
+
+  <div id="priceListView">
+    <div class="pl-grid">
+      <!-- Left: sell price list -->
+      <div class="panel">
+        <div class="recipe-list-head">Sell Prices</div>
+        <div class="pl-section-title">Ammo</div>
+        <div class="pl-price-row"><span>9mm (each)</span><span>$20</span></div>
+        <div class="pl-price-row"><span>SMG Ammo (each)</span><span>$50</span></div>
+        <div class="pl-price-row"><span>Rifle Ammo (each)</span><span>$50</span></div>
+        <div class="pl-section-title">Devices</div>
+        <div class="pl-price-row"><span>Bag</span><span>$5,000</span></div>
+        <div class="pl-price-row"><span>Drill</span><span>$20,000</span></div>
+        <div class="pl-price-row"><span>Hacking Device</span><span>$30,000</span></div>
+        <div class="pl-price-row"><span>Cutter</span><span>$10,000</span></div>
+        <div class="pl-price-row"><span>Big Bomb</span><span>$15,000</span></div>
+        <div class="pl-price-row"><span>C4 Bomb</span><span>$15,000</span></div>
+        <div class="pl-price-row"><span>Glass Cutter</span><span>$20,000</span></div>
+        <div class="pl-price-row"><span>Thermite</span><span>$10,000</span></div>
+        <div class="pl-price-row"><span>Safe Cracker</span><span>$50,000</span></div>
+        <div class="pl-section-title">Guns</div>
+        <div class="pl-price-row"><span>Pistol</span><span>$10,000</span></div>
+        <div class="pl-price-row"><span>Heavy Pistol</span><span>$25,000</span></div>
+        <div class="pl-price-row"><span>Vintage Pistol</span><span>$15,000</span></div>
+        <div class="pl-price-row"><span>SNS Pistol</span><span>$15,000</span></div>
+        <div class="pl-price-row"><span>Carbine Rifle</span><span>$50,000</span></div>
+        <div class="pl-price-row"><span>Assault Rifle</span><span>$75,000</span></div>
+        <div class="pl-price-row"><span>SMG</span><span>$175,000</span></div>
+      </div>
+
+      <!-- Right: package calculator -->
+      <div>
+        <div class="panel" style="padding:18px 20px;margin-bottom:16px;">
+          <h2 class="section" style="margin-bottom:6px;">Package Calculator</h2>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">
+            Type how many of each package you need. Totals below combine materials (with fail chance), craft time, XP, and package value.
+          </div>
+          <label class="toggle-row" style="margin-top:8px;">
+            <input type="checkbox" id="plFailToggle" checked>
+            Account for fail chance in materials &amp; time
+          </label>
+        </div>
+        <div id="pkgCards"></div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="recipe-list-head">Individual Items</div>
+          <div id="itemOrders"></div>
+        </div>
+        <div class="panel totals-card" id="pkgTotals"></div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -694,11 +838,306 @@ function render(){
   renderTable();
 }
 
+
+/* ---------- Price list & packages ---------- */
+const prices = {
+  pistolammo:20, smgammo:50, rifleammo:50,
+  bag:5000, drill:20000, vhd:30000, cutter:10000,
+  bigbomb:15000, c4:15000, glasscutter:20000, thermite:10000, safecracker:50000,
+  pistol:10000, heavypistol:25000, vintage:15000, sns:15000, carbine:50000, assault:75000
+};
+
+const packages = [
+  { id:'bigbank', name:'Big Bank Package',
+    items:[
+      {rid:'thermite', q:4},
+      {rid:'switchblade', q:1},
+      {rid:'assault', q:1},
+      {rid:'drill', q:2},
+      {rid:'usb', q:2, label:'USB Stick (red)'},
+      {rid:'bag', q:3},
+    ]},
+  { id:'bobcat', name:'Bobcat Package',
+    items:[
+      {rid:'thermite', q:2},
+      {rid:'bigbomb', q:1},
+      {rid:'hackusb', q:1, label:'Hacking USB'},
+      {rid:'bag', q:1},
+      {rid:'cutter', q:1},
+      {rid:null, q:1, label:'Crowbar', note:'not craftable'},
+      {rid:'drill', q:1},
+    ]},
+  { id:'fleece', name:'Fleece Bank Package',
+    items:[
+      {rid:'assault', q:1},
+      {rid:'c4', q:2},
+      {rid:'drill', q:1},
+      {rid:'laptop', q:1},
+    ]},
+];
+
+const pkgQty = { bigbank:0, bobcat:0, fleece:0 };
+
+/* Individual item ordering: grouped list. rid = craftable recipe id, or null for buy-only items */
+const orderItems = [
+  { group:'Ammo', list:[
+    { rid:'pistolammo', label:'9mm' },
+    { rid:'smgammo', label:'SMG Ammo' },
+    { rid:'rifleammo', label:'Rifle Ammo (5.56x45)' },
+  ]},
+  { group:'Devices', list:[
+    { rid:'bag', label:'Bag' },
+    { rid:'drill', label:'Drill' },
+    { rid:'vhd', label:'Hacking Device' },
+    { rid:'cutter', label:'Cutter' },
+    { rid:'bigbomb', label:'Big Bomb' },
+    { rid:'c4', label:'C4 Bomb' },
+    { rid:'glasscutter', label:'Glass Cutter' },
+    { rid:'thermite', label:'Thermite' },
+    { rid:'safecracker', label:'Safe Cracker' },
+    { rid:'usb', label:'USB Stick (red)' },
+    { rid:'hackusb', label:'Hack USB' },
+    { rid:'laptop', label:'Laptop' },
+    { rid:'switchblade', label:'Switchblade' },
+    { rid:'gps', label:'GPS Hacking Device' },
+    { rid:'radio', label:'Radio Scanner' },
+    { rid:'boost', label:'Boosting Tablet' },
+    { rid:'cuffs', label:'Handcuffs' },
+    { rid:'bobbypin', label:'Bobby Pin' },
+  ].filter(x=>x.label)},
+  { group:'Guns', list:[
+    { rid:'pistol', label:'Pistol' },
+    { rid:'heavypistol', label:'Heavy Pistol' },
+    { rid:'vintage', label:'Vintage Pistol' },
+    { rid:'sns', label:'SNS Pistol' },
+    { rid:'carbine', label:'Carbine Rifle' },
+    { rid:'assault', label:'Assault Rifle' },
+    { rid:'smg', label:'SMG', buyOnly:true },
+  ]},
+];
+prices.smg = 175000;
+
+const itemQty = {};
+orderItems.forEach(g=>g.list.forEach(it=>{ itemQty[it.rid] = 0; }));
+
+function calcItem(it, count, applyFail){
+  const mats = {};
+  let time=0, xp=0, value=0;
+  const unpriced=[], uncraftable=[];
+  const r = (!it.buyOnly && it.rid) ? findRecipe(it.rid) : null;
+  if(r){
+    const failRate = r.fail/100;
+    const attempts = (applyFail && failRate>0) ? Math.ceil(count/(1-failRate)) : count;
+    r.ingredients.forEach(i=>{ mats[i.n]=(mats[i.n]||0)+i.q*attempts; });
+    time += r.time * attempts;
+    xp += r.xp * count;
+  } else if(it.buyOnly){
+    uncraftable.push(it.label + ' x' + count);
+  }
+  if(prices[it.rid] != null) value += prices[it.rid] * count;
+  else unpriced.push(it.label + ' x' + count);
+  return { mats, time, xp, value, unpriced, uncraftable };
+}
+
+function renderItemOrders(){
+  const div = document.getElementById('itemOrders');
+  div.innerHTML = orderItems.map(g=>`
+    <div class="pl-section-title">${g.group}</div>
+    ${g.list.map(it=>{
+      const p = prices[it.rid];
+      return `
+      <div class="item-order-row">
+        <span class="io-name">${it.label}${it.buyOnly ? ' <span style="font-size:10px;color:var(--text-dim);">(price only)</span>' : ''}</span>
+        <span class="io-price">${p!=null ? '$'+p.toLocaleString() : '—'}</span>
+        <div class="qty-box">
+          <button data-item="${it.rid}" data-d="-1">−</button>
+          <input type="number" min="0" value="${itemQty[it.rid]}" data-item="${it.rid}">
+          <button data-item="${it.rid}" data-d="1">+</button>
+        </div>
+      </div>`;
+    }).join('')}
+  `).join('');
+
+  div.querySelectorAll('input[data-item]').forEach(inp=>{
+    inp.oninput = ()=>{
+      let v = parseInt(inp.value,10);
+      if(isNaN(v)||v<0) v=0;
+      itemQty[inp.dataset.item] = v;
+      updateGrandTotals();
+    };
+  });
+  div.querySelectorAll('button[data-item]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.item;
+      itemQty[id] = Math.max(0, itemQty[id] + parseInt(btn.dataset.d,10));
+      const inp = div.querySelector(`input[data-item="${id}"]`);
+      if(inp) inp.value = itemQty[id];
+      updateGrandTotals();
+    };
+  });
+}
+
+function findRecipe(rid){
+  for(const tab of ['blackmarket','weapons']){
+    const r = data[tab].recipes.find(x=>x.id===rid);
+    if(r) return r;
+  }
+  return null;
+}
+
+function calcPackage(pkg, count, applyFail){
+  const mats = {};
+  let time = 0, xp = 0, value = 0;
+  const unpriced = [], uncraftable = [];
+  pkg.items.forEach(it=>{
+    const totalQ = it.q * count;
+    const r = it.rid ? findRecipe(it.rid) : null;
+    if(!r){
+      uncraftable.push((it.label||'?') + ' x' + totalQ);
+      return;
+    }
+    const failRate = r.fail/100;
+    const attempts = (applyFail && failRate>0) ? Math.ceil(totalQ/(1-failRate)) : totalQ;
+    r.ingredients.forEach(i=>{ mats[i.n] = (mats[i.n]||0) + i.q*attempts; });
+    time += r.time * attempts;
+    xp += r.xp * totalQ;
+    if(prices[it.rid] != null) value += prices[it.rid] * totalQ;
+    else unpriced.push((it.label||r.name) + ' x' + totalQ);
+  });
+  return { mats, time, xp, value, unpriced, uncraftable };
+}
+
+function renderPriceList(){
+  const applyFail = document.getElementById('plFailToggle').checked;
+  const cardsDiv = document.getElementById('pkgCards');
+  cardsDiv.innerHTML = '';
+
+  packages.forEach(pkg=>{
+    const count = pkgQty[pkg.id];
+    const one = calcPackage(pkg, 1, applyFail);
+    const card = document.createElement('div');
+    card.className = 'pkg-card';
+    const contents = pkg.items.map(it=>{
+      const r = it.rid ? findRecipe(it.rid) : null;
+      const nm = it.label || (r ? r.name : '?');
+      return it.q + 'x ' + nm + (it.note ? ' ('+it.note+')' : '');
+    }).join(' &nbsp;·&nbsp; ');
+    card.innerHTML = `
+      <div class="pkg-head">
+        <div class="pkg-name">${pkg.name}</div>
+        <div class="qty-box">
+          <button data-pkg="${pkg.id}" data-d="-1">−</button>
+          <input type="number" min="0" value="${count}" data-pkg="${pkg.id}">
+          <button data-pkg="${pkg.id}" data-d="1">+</button>
+        </div>
+      </div>
+      <div class="pkg-contents">${contents}</div>
+      <div class="pkg-stats">
+        <div class="pkg-stat value"><small>Value / package</small>$${one.value.toLocaleString()}</div>
+        <div class="pkg-stat time"><small>Craft time / package</small>${fmtTime(one.time)}</div>
+        <div class="pkg-stat xp"><small>XP / package</small>${one.xp.toLocaleString()} XP</div>
+      </div>
+      ${one.unpriced.length ? '<div class="warn-note">No price listed for: '+one.unpriced.join(', ')+' — not counted in value.</div>' : ''}
+      ${one.uncraftable.length ? '<div class="warn-note">Not craftable (source separately): '+one.uncraftable.join(', ')+'</div>' : ''}
+    `;
+    cardsDiv.appendChild(card);
+  });
+
+  // wire inputs
+  cardsDiv.querySelectorAll('input[data-pkg]').forEach(inp=>{
+    inp.oninput = ()=>{
+      let v = parseInt(inp.value,10);
+      if(isNaN(v)||v<0) v=0;
+      pkgQty[inp.dataset.pkg] = v;
+      updateGrandTotals();
+    };
+  });
+  cardsDiv.querySelectorAll('button[data-pkg]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.pkg;
+      pkgQty[id] = Math.max(0, pkgQty[id] + parseInt(btn.dataset.d,10));
+      const inp = cardsDiv.querySelector(`input[data-pkg="${id}"]`);
+      if(inp) inp.value = pkgQty[id];
+      updateGrandTotals();
+    };
+  });
+
+  renderItemOrders();
+  updateGrandTotals();
+}
+
+function updateGrandTotals(){
+  const applyFail = document.getElementById('plFailToggle').checked;
+  // ---- grand totals (packages + individual items) ----
+  const totMats = {};
+  let totTime=0, totXp=0, totValue=0, totPkgs=0, totItems=0;
+  const totUnpriced = new Set(), totUncraft = new Set();
+  packages.forEach(pkg=>{
+    const count = pkgQty[pkg.id];
+    if(count<=0) return;
+    totPkgs += count;
+    const res = calcPackage(pkg, count, applyFail);
+    Object.entries(res.mats).forEach(([k,v])=>{ totMats[k]=(totMats[k]||0)+v; });
+    totTime += res.time; totXp += res.xp; totValue += res.value;
+    res.unpriced.forEach(u=>totUnpriced.add(u));
+    res.uncraftable.forEach(u=>totUncraft.add(u));
+  });
+  orderItems.forEach(g=>g.list.forEach(it=>{
+    const count = itemQty[it.rid];
+    if(count<=0) return;
+    totItems += count;
+    const res = calcItem(it, count, applyFail);
+    Object.entries(res.mats).forEach(([k,v])=>{ totMats[k]=(totMats[k]||0)+v; });
+    totTime += res.time; totXp += res.xp; totValue += res.value;
+    res.unpriced.forEach(u=>totUnpriced.add(u));
+    res.uncraftable.forEach(u=>totUncraft.add(u));
+  }));
+
+  const totalsDiv = document.getElementById('pkgTotals');
+  if(totPkgs===0 && totItems===0){
+    totalsDiv.innerHTML = '<h2 class="section" style="border-color:var(--cyan-dim);">Grand Totals</h2><div style="color:var(--text-dim);font-size:13px;">Set a package or item quantity above to see combined totals.</div>';
+    return;
+  }
+  const matRows = Object.entries(totMats).sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([k,v])=>`<div class="ing-row"><span>${k}</span><span>${v.toLocaleString()}x</span></div>`).join('');
+  totalsDiv.innerHTML = `
+    <h2 class="section" style="border-color:var(--cyan-dim);">Grand Totals — ${[totPkgs>0 ? totPkgs+' package'+(totPkgs>1?'s':'') : null, totItems>0 ? totItems+' individual item'+(totItems>1?'s':'') : null].filter(Boolean).join(' + ')}</h2>
+    <div class="results-grid" style="margin-bottom:14px;">
+      <div class="result-card">
+        <h3>Total materials needed</h3>
+        ${matRows}
+      </div>
+      <div class="result-card">
+        <h3>Summary</h3>
+        <div class="ing-row"><span>Total package value</span><span>$${totValue.toLocaleString()}</span></div>
+        <div class="ing-row"><span>Total craft time</span><span>${fmtTime(totTime)}</span></div>
+        <div class="ing-row"><span>Total XP</span><span>${totXp.toLocaleString()} XP</span></div>
+      </div>
+    </div>
+    ${totUnpriced.size ? '<div class="warn-note">Value excludes unpriced items: '+[...totUnpriced].join(', ')+'</div>' : ''}
+    ${totUncraft.size ? '<div class="warn-note">Also source separately: '+[...totUncraft].join(', ')+'</div>' : ''}
+  `;
+}
+
+document.getElementById('plFailToggle').onchange = renderPriceList;
+
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.onclick = ()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     activeTab = btn.dataset.tab;
+    if(activeTab === 'pricelist'){
+      document.querySelector('.layout').style.display = 'none';
+      document.querySelector('.layout').nextElementSibling.style.display = 'none';
+      document.getElementById('priceListView').style.display = 'block';
+      document.getElementById('eyebrowText').textContent = 'Devils Hounds // Price List';
+      document.getElementById('titleTab').textContent = 'Devils Hounds';
+      renderPriceList();
+      return;
+    }
+    document.querySelector('.layout').style.display = '';
+    document.querySelector('.layout').nextElementSibling.style.display = '';
+    document.getElementById('priceListView').style.display = 'none';
     activeId = tabRecipes()[0].id;
     render();
   };
