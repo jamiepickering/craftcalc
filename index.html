@@ -450,6 +450,58 @@
   }
   .item-order-row .qty-box input{width:52px;font-size:15px;}
   .item-order-row .qty-box button{width:30px;font-size:15px;}
+
+  .order-form{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  @media (max-width:700px){ .order-form{grid-template-columns:1fr;} }
+  .order-field label{
+    display:block;
+    font-family:'Rajdhani',sans-serif;
+    font-weight:600;font-size:10px;
+    letter-spacing:.14em;text-transform:uppercase;
+    color:var(--text-dim);
+    margin-bottom:4px;
+  }
+  .order-field input{
+    width:100%;
+    background:#111010;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Chakra Petch',sans-serif;
+    font-size:14px;
+    padding:9px 10px;
+  }
+  .order-field input:focus{outline:none;border-color:var(--cyan);}
+  .order-field.full{grid-column:1 / -1;}
+  .send-row{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    margin-top:4px;
+  }
+  .send-btn{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;font-style:italic;text-transform:uppercase;
+    letter-spacing:.05em;font-size:15px;
+    background:var(--cyan);
+    border:1px solid var(--cyan);
+    color:#efeeec;
+    padding:11px 28px;
+    cursor:pointer;
+    transition:filter .12s;
+  }
+  .send-btn:hover{filter:brightness(1.15);}
+  .send-btn:disabled{opacity:.45;cursor:not-allowed;filter:none;}
+  .send-status{
+    font-size:12px;
+    font-family:'Rajdhani',sans-serif;
+    font-weight:600;
+    letter-spacing:.04em;
+  }
+  .send-status.ok{color:#8fbf9a;}
+  .send-status.err{color:#d4695c;}
 </style>
 </head>
 <body>
@@ -592,6 +644,28 @@
           <div id="itemOrders"></div>
         </div>
         <div class="panel totals-card" id="pkgTotals"></div>
+        <div class="panel" style="margin-top:16px;padding:18px 20px;">
+          <h2 class="section">Order Details</h2>
+          <div class="order-form">
+            <div class="order-field">
+              <label>Customer name</label>
+              <input type="text" id="ordCustomer" placeholder="Who's buying">
+            </div>
+            <div class="order-field">
+              <label>Order taken by</label>
+              <input type="text" id="ordTaker" placeholder="Your name / handle">
+            </div>
+            <div class="order-field full">
+              <label>Discord webhook URL</label>
+              <input type="text" id="ordWebhook" placeholder="https://discord.com/api/webhooks/...">
+            </div>
+          </div>
+          <div class="send-row">
+            <button class="send-btn" id="sendOrderBtn">Send Order to Discord</button>
+            <span class="send-status" id="sendStatus"></span>
+          </div>
+          <div class="footnote">The webhook URL is remembered in this browser after the first send. Anyone with the URL can post to that channel, so only share this file with people you trust with it.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1142,6 +1216,114 @@ function updateGrandTotals(){
 }
 
 document.getElementById('plFailToggle').onchange = renderPriceList;
+
+/* ---------- Order form & Discord webhook ---------- */
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+(function initOrderForm(){
+  const wh = lsGet('dh_webhook'); if(wh) document.getElementById('ordWebhook').value = wh;
+  const tk = lsGet('dh_taker'); if(tk) document.getElementById('ordTaker').value = tk;
+})();
+
+function buildOrderData(){
+  const applyFail = document.getElementById('plFailToggle').checked;
+  const lines = [];
+  const totMats = {};
+  let totTime=0, totXp=0, totValue=0, anything=false;
+  const notes = new Set();
+
+  packages.forEach(pkg=>{
+    const count = pkgQty[pkg.id];
+    if(count<=0) return;
+    anything = true;
+    const res = calcPackage(pkg, count, applyFail);
+    lines.push(`${count}x ${pkg.name} — $${res.value.toLocaleString()}`);
+    Object.entries(res.mats).forEach(([k,v])=>{ totMats[k]=(totMats[k]||0)+v; });
+    totTime += res.time; totXp += res.xp; totValue += res.value;
+    res.unpriced.forEach(u=>notes.add('No price: '+u));
+    res.uncraftable.forEach(u=>notes.add('Source separately: '+u));
+  });
+  orderItems.forEach(g=>g.list.forEach(it=>{
+    const count = itemQty[it.rid];
+    if(count<=0) return;
+    anything = true;
+    const res = calcItem(it, count, applyFail);
+    const priceTxt = prices[it.rid]!=null ? ' — $'+res.value.toLocaleString() : ' — (no price)';
+    lines.push(`${count}x ${it.label}${priceTxt}`);
+    Object.entries(res.mats).forEach(([k,v])=>{ totMats[k]=(totMats[k]||0)+v; });
+    totTime += res.time; totXp += res.xp; totValue += res.value;
+    res.uncraftable.forEach(u=>notes.add('Source separately: '+u));
+  }));
+
+  return { anything, lines, totMats, totTime, totXp, totValue, notes:[...notes] };
+}
+
+async function sendOrder(){
+  const status = document.getElementById('sendStatus');
+  const btn = document.getElementById('sendOrderBtn');
+  const customer = document.getElementById('ordCustomer').value.trim();
+  const taker = document.getElementById('ordTaker').value.trim();
+  const webhook = document.getElementById('ordWebhook').value.trim();
+
+  status.className = 'send-status';
+  if(!webhook || !webhook.startsWith('https://discord.com/api/webhooks/') && !webhook.startsWith('https://discordapp.com/api/webhooks/')){
+    status.textContent = 'Enter a valid Discord webhook URL.';
+    status.classList.add('err'); return;
+  }
+  const order = buildOrderData();
+  if(!order.anything){
+    status.textContent = 'Order is empty — set some package or item quantities first.';
+    status.classList.add('err'); return;
+  }
+
+  const matLines = Object.entries(order.totMats).sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([k,v])=>`${k}: ${v.toLocaleString()}x`).join('\n') || 'None';
+
+  const embed = {
+    title: '\u{1F4E6} New Crafting Order',
+    color: 0xa32b1e,
+    fields: [
+      { name: 'Customer', value: customer || '—', inline: true },
+      { name: 'Taken by', value: taker || '—', inline: true },
+      { name: 'Total value', value: '$' + order.totValue.toLocaleString(), inline: true },
+      { name: 'Items', value: order.lines.join('\n').slice(0,1024) },
+      { name: 'Materials needed', value: matLines.slice(0,1024) },
+      { name: 'Craft time', value: fmtTime(order.totTime), inline: true },
+      { name: 'XP earned', value: order.totXp.toLocaleString() + ' XP', inline: true },
+    ],
+    footer: { text: 'Devils Hounds MC \u2022 Crafting Calculator' },
+    timestamp: new Date().toISOString(),
+  };
+  if(order.notes.length){
+    embed.fields.push({ name: 'Notes', value: order.notes.join('\n').slice(0,1024) });
+  }
+
+  btn.disabled = true;
+  status.textContent = 'Sending...';
+  try{
+    const resp = await fetch(webhook, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username:'Devils Hounds Orders', embeds:[embed] })
+    });
+    if(resp.ok){
+      status.textContent = 'Order sent \u2713';
+      status.classList.add('ok');
+      lsSet('dh_webhook', webhook);
+      if(taker) lsSet('dh_taker', taker);
+    } else {
+      status.textContent = 'Discord rejected it (HTTP '+resp.status+'). Check the webhook URL.';
+      status.classList.add('err');
+    }
+  }catch(e){
+    status.textContent = 'Send failed — check your internet or the webhook URL.';
+    status.classList.add('err');
+  }
+  btn.disabled = false;
+}
+document.getElementById('sendOrderBtn').onclick = sendOrder;
+
 
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.onclick = ()=>{
