@@ -645,6 +645,7 @@
             <button class="send-btn" id="chopPullBtn">Load Order Materials</button>
             <button class="send-btn" id="chopClearBtn" style="background:transparent;color:var(--text-dim);border-color:var(--line);">Clear</button>
           </div>
+          <div class="warn-note" id="chopSkipNote"></div>
         </div>
         <div class="panel" style="padding:18px 20px;">
           <h2 class="section">Quick Convert</h2>
@@ -1403,7 +1404,8 @@ document.getElementById('sendOrderBtn').onclick = sendOrder;
 /* ---------- Chopping: auto parts <-> materials ---------- */
 const PARTS_RATE = 12; // 1 auto part = 12x of any one material
 const PARTS_PER_CAR = 35; // average auto parts per chopped car
-const chopMats = ['Aluminium','Cloth','Copper','Diamond','Electronic Kit','Gun Powder','Iron','Metal Scrap','Plastic','Primer','Rubber','Steel'];
+const chopMats = ['Aluminium','Copper','Iron','Metal Scrap','Plastic','Rubber','Steel'];
+const chopExcluded = ['Cloth','Diamond','Electronic Kit','Gun Powder','Primer']; // can't be sourced from chopping
 const chopNeed = {};
 chopMats.forEach(m=>chopNeed[m]=0);
 
@@ -1455,15 +1457,22 @@ function updateChopTotals(){
 document.getElementById('chopPullBtn').onclick = ()=>{
   const order = buildOrderData();
   chopMats.forEach(m=>chopNeed[m]=0);
+  const skipped = [];
   Object.entries(order.totMats).forEach(([k,v])=>{
+    if(chopExcluded.includes(k)){ skipped.push(v.toLocaleString()+'x '+k); return; }
     if(chopNeed[k] !== undefined) chopNeed[k] = v;
     else { chopMats.push(k); chopNeed[k] = v; }
   });
   renderChopping();
+  const note = document.getElementById('chopSkipNote');
+  note.innerHTML = skipped.length
+    ? 'Not choppable, source elsewhere: ' + skipped.join(', ')
+    : '';
 };
 document.getElementById('chopClearBtn').onclick = ()=>{
   chopMats.forEach(m=>chopNeed[m]=0);
   renderChopping();
+  document.getElementById('chopSkipNote').innerHTML = '';
 };
 
 function chopHaveUpdate(){
