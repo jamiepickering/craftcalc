@@ -502,6 +502,26 @@
   }
   .send-status.ok{color:#8fbf9a;}
   .send-status.err{color:#d4695c;}
+
+  /* Chopping view */
+  #choppingView{display:none;}
+  .chop-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;
+  }
+  @media (max-width:900px){ .chop-grid{grid-template-columns:1fr;} }
+  .chop-mat-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 14px;border-bottom:1px dashed var(--line);
+  }
+  .chop-mat-row .cm-name{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:14px;flex:1;}
+  .chop-mat-row .cm-parts{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;color:#e3e2df;width:110px;text-align:right;}
+  .chop-mat-row .qty-box input{width:64px;font-size:15px;}
+  .chop-mat-row .qty-box button{width:30px;font-size:15px;}
+  .big-number{
+    font-family:'Rajdhani',sans-serif;font-weight:700;font-style:italic;
+    font-size:44px;color:#fff;line-height:1;
+  }
+  .big-number small{font-size:13px;font-style:normal;font-weight:600;color:var(--text-dim);display:block;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
 </style>
 </head>
 <body>
@@ -517,6 +537,7 @@
     <button class="tab-btn active" data-tab="blackmarket">BlackMarket</button>
     <button class="tab-btn" data-tab="weapons">Weapons</button>
     <button class="tab-btn" data-tab="heist">Heist</button>
+    <button class="tab-btn" data-tab="chopping">Chopping</button>
     <button class="tab-btn" data-tab="pricelist">Price List</button>
   </div>
 
@@ -595,6 +616,61 @@
       </thead>
       <tbody id="refTable"></tbody>
     </table>
+  </div>
+
+
+  <div id="choppingView">
+    <div class="chop-grid">
+      <!-- Left: converter -->
+      <div class="panel">
+        <div class="recipe-list-head">Auto Parts &rarr; Materials</div>
+        <div style="padding:14px 14px 6px;font-size:12px;color:var(--text-dim);line-height:1.6;">
+          1 Auto Part converts into <b style="color:#e3e2df;">12x of any one material</b>. Enter the materials you want and this shows the auto parts needed for each.
+        </div>
+        <div id="chopMatRows"></div>
+        <div style="padding:16px 14px;">
+          <div class="big-number"><small>Total auto parts needed</small><span id="chopTotalParts">0</span></div>
+          <div class="big-number" style="margin-top:14px;"><small>Cars to chop (avg 35 parts/car)</small><span id="chopTotalCars">0</span></div>
+        </div>
+      </div>
+
+      <!-- Right: pull from order + quick convert -->
+      <div>
+        <div class="panel" style="padding:18px 20px;margin-bottom:16px;">
+          <h2 class="section">Pull From Current Order</h2>
+          <div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:12px;">
+            Loads the total material list from whatever packages and items are set on the Price List tab, and works out the auto parts needed to cover all of it.
+          </div>
+          <div class="send-row">
+            <button class="send-btn" id="chopPullBtn">Load Order Materials</button>
+            <button class="send-btn" id="chopClearBtn" style="background:transparent;color:var(--text-dim);border-color:var(--line);">Clear</button>
+          </div>
+        </div>
+        <div class="panel" style="padding:18px 20px;">
+          <h2 class="section">Quick Convert</h2>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">Have parts already? See what they're worth in materials.</div>
+          <div class="qty-row" style="margin-bottom:10px;">
+            <span class="qty-label">Auto parts on hand</span>
+            <div class="qty-box">
+              <button id="chopHaveMinus">&minus;</button>
+              <input id="chopHaveInput" type="number" min="0" value="0">
+              <button id="chopHavePlus">+</button>
+            </div>
+          </div>
+          <div class="summary-line"><span>Converts into</span><b id="chopHaveOut">0 materials (of one type per part)</b></div>
+          <div class="qty-row" style="margin:14px 0 10px;">
+            <span class="qty-label">Or cars chopped</span>
+            <div class="qty-box">
+              <button id="chopCarsMinus">&minus;</button>
+              <input id="chopCarsInput" type="number" min="0" value="0">
+              <button id="chopCarsPlus">+</button>
+            </div>
+          </div>
+          <div class="summary-line"><span>Average yield</span><b id="chopCarsOut">0 parts &rarr; 0 materials</b></div>
+          <div class="footnote">Each part converts to 12x of a single material — you choose the material per part, so 5 parts could be 60 Plastic, or 24 Plastic + 36 Steel, etc. Cars average ~35 parts each, so actual hauls will vary a bit.</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="priceListView">
@@ -1324,24 +1400,122 @@ async function sendOrder(){
 }
 document.getElementById('sendOrderBtn').onclick = sendOrder;
 
+/* ---------- Chopping: auto parts <-> materials ---------- */
+const PARTS_RATE = 12; // 1 auto part = 12x of any one material
+const PARTS_PER_CAR = 35; // average auto parts per chopped car
+const chopMats = ['Aluminium','Cloth','Copper','Diamond','Electronic Kit','Gun Powder','Iron','Metal Scrap','Plastic','Primer','Rubber','Steel'];
+const chopNeed = {};
+chopMats.forEach(m=>chopNeed[m]=0);
+
+function renderChopping(){
+  const rowsDiv = document.getElementById('chopMatRows');
+  rowsDiv.innerHTML = chopMats.map(m=>{
+    const need = chopNeed[m];
+    const parts = Math.ceil(need / PARTS_RATE);
+    return `
+    <div class="chop-mat-row">
+      <span class="cm-name">${m}</span>
+      <div class="qty-box">
+        <button data-chop="${m}" data-d="-12">\u2212</button>
+        <input type="number" min="0" value="${need}" data-chop="${m}">
+        <button data-chop="${m}" data-d="12">+</button>
+      </div>
+      <span class="cm-parts">${need>0 ? parts.toLocaleString()+' part'+(parts>1?'s':'') : '\u2014'}</span>
+    </div>`;
+  }).join('');
+
+  rowsDiv.querySelectorAll('input[data-chop]').forEach(inp=>{
+    inp.oninput = ()=>{
+      let v = parseInt(inp.value,10);
+      if(isNaN(v)||v<0) v=0;
+      chopNeed[inp.dataset.chop] = v;
+      updateChopTotals();
+      const row = inp.closest('.chop-mat-row');
+      const parts = Math.ceil(v / PARTS_RATE);
+      row.querySelector('.cm-parts').textContent = v>0 ? parts.toLocaleString()+' part'+(parts>1?'s':'') : '\u2014';
+    };
+  });
+  rowsDiv.querySelectorAll('button[data-chop]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const m = btn.dataset.chop;
+      chopNeed[m] = Math.max(0, chopNeed[m] + parseInt(btn.dataset.d,10));
+      renderChopping();
+    };
+  });
+  updateChopTotals();
+}
+
+function updateChopTotals(){
+  let total = 0;
+  chopMats.forEach(m=>{ if(chopNeed[m]>0) total += Math.ceil(chopNeed[m]/PARTS_RATE); });
+  document.getElementById('chopTotalParts').textContent = total.toLocaleString();
+  document.getElementById('chopTotalCars').textContent = total>0 ? '~' + Math.ceil(total/PARTS_PER_CAR).toLocaleString() : '0';
+}
+
+document.getElementById('chopPullBtn').onclick = ()=>{
+  const order = buildOrderData();
+  chopMats.forEach(m=>chopNeed[m]=0);
+  Object.entries(order.totMats).forEach(([k,v])=>{
+    if(chopNeed[k] !== undefined) chopNeed[k] = v;
+    else { chopMats.push(k); chopNeed[k] = v; }
+  });
+  renderChopping();
+};
+document.getElementById('chopClearBtn').onclick = ()=>{
+  chopMats.forEach(m=>chopNeed[m]=0);
+  renderChopping();
+};
+
+function chopHaveUpdate(){
+  const el = document.getElementById('chopHaveInput');
+  let v = parseInt(el.value,10);
+  if(isNaN(v)||v<0) v=0;
+  document.getElementById('chopHaveOut').textContent = (v*PARTS_RATE).toLocaleString() + ' materials (of one type per part)';
+}
+document.getElementById('chopHaveInput').oninput = chopHaveUpdate;
+document.getElementById('chopHaveMinus').onclick = ()=>{ const el=document.getElementById('chopHaveInput'); el.value=Math.max(0,(parseInt(el.value,10)||0)-1); chopHaveUpdate(); };
+
+function chopCarsUpdate(){
+  const el = document.getElementById('chopCarsInput');
+  let v = parseInt(el.value,10);
+  if(isNaN(v)||v<0) v=0;
+  const parts = v * PARTS_PER_CAR;
+  document.getElementById('chopCarsOut').innerHTML = '~' + parts.toLocaleString() + ' parts &rarr; ~' + (parts*PARTS_RATE).toLocaleString() + ' materials';
+}
+document.getElementById('chopCarsInput').oninput = chopCarsUpdate;
+document.getElementById('chopCarsMinus').onclick = ()=>{ const el=document.getElementById('chopCarsInput'); el.value=Math.max(0,(parseInt(el.value,10)||0)-1); chopCarsUpdate(); };
+document.getElementById('chopCarsPlus').onclick = ()=>{ const el=document.getElementById('chopCarsInput'); el.value=(parseInt(el.value,10)||0)+1; chopCarsUpdate(); };
+document.getElementById('chopHavePlus').onclick = ()=>{ const el=document.getElementById('chopHaveInput'); el.value=(parseInt(el.value,10)||0)+1; chopHaveUpdate(); };
+
+
 
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.onclick = ()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     activeTab = btn.dataset.tab;
-    if(activeTab === 'pricelist'){
-      document.querySelector('.layout').style.display = 'none';
-      document.querySelector('.layout').nextElementSibling.style.display = 'none';
-      document.getElementById('priceListView').style.display = 'block';
-      document.getElementById('eyebrowText').textContent = 'Devils Hounds // Price List';
-      document.getElementById('titleTab').textContent = 'Devils Hounds';
-      renderPriceList();
+    const layoutEl = document.querySelector('.layout');
+    const refTableEl = layoutEl.nextElementSibling;
+    if(activeTab === 'pricelist' || activeTab === 'chopping'){
+      layoutEl.style.display = 'none';
+      refTableEl.style.display = 'none';
+      document.getElementById('priceListView').style.display = activeTab==='pricelist' ? 'block' : 'none';
+      document.getElementById('choppingView').style.display = activeTab==='chopping' ? 'block' : 'none';
+      if(activeTab === 'pricelist'){
+        document.getElementById('eyebrowText').textContent = 'Devils Hounds // Price List';
+        document.getElementById('titleTab').textContent = 'Devils Hounds';
+        renderPriceList();
+      } else {
+        document.getElementById('eyebrowText').textContent = 'Devils Hounds // Chop Shop';
+        document.getElementById('titleTab').textContent = 'Chop Shop';
+        renderChopping();
+      }
       return;
     }
-    document.querySelector('.layout').style.display = '';
-    document.querySelector('.layout').nextElementSibling.style.display = '';
+    layoutEl.style.display = '';
+    refTableEl.style.display = '';
     document.getElementById('priceListView').style.display = 'none';
+    document.getElementById('choppingView').style.display = 'none';
     activeId = tabRecipes()[0].id;
     render();
   };
